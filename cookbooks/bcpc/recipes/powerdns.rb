@@ -2,7 +2,7 @@
 # Cookbook Name:: bcpc
 # Recipe:: powerdns
 #
-# Copyright 2013, Bloomberg Finance L.P.
+# Copyright 2016, Bloomberg Finance L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,6 +35,9 @@ chef_vault_secret "mysql-pdns" do
   search '*:*'
   action :nothing
 end.run_action(:create_if_missing)
+
+subnet = node[:bcpc][:management][:subnet]
+raise "Did not get a subnet" if not subnet
 
 %w{pdns-server pdns-backend-mysql}.each do |pkg|
     package pkg do
@@ -70,7 +73,7 @@ ruby_block "powerdns-table-domains" do
     block do
         mysql_root_password = get_config!('password','mysql-root','os')
 
-        reverse_dns_zone = node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])
+        reverse_dns_zone = node['bcpc']['networks'][subnet]['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['networks'][subnet]['floating']['cidr'])
 
         system "mysql -uroot -p#{ mysql_root_password } -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \"#{node[:bcpc][:pdns_dbname]}\" AND TABLE_NAME=\"domains_static\"' | grep -q \"domains_static\""
         if not $?.success? then
@@ -99,7 +102,7 @@ ruby_block "powerdns-table-records" do
     block do
         mysql_root_password = get_config!('password','mysql-root','os')
 
-        reverse_dns_zone = node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])
+        reverse_dns_zone = node['bcpc']['networks'][subnet]['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['networks'][subnet]['floating']['cidr'])
 
         system "mysql -uroot -p#{ mysql_root_password } -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = \"#{node[:bcpc][:pdns_dbname]}\" AND TABLE_NAME=\"records_static\"' | grep -q \"records_static\""
         if not $?.success? then
@@ -116,11 +119,11 @@ ruby_block "powerdns-table-records" do
                         primary key(id)
                     );
                     INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains_static WHERE name='#{node[:bcpc][:domain_name]}'),'#{node[:bcpc][:domain_name]}','localhost root@#{node[:bcpc][:domain_name]} 1','SOA',300,NULL);
-                    INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains_static WHERE name='#{node[:bcpc][:domain_name]}'),'#{node[:bcpc][:domain_name]}','#{node[:bcpc][:management][:vip]}','NS',300,NULL);
-                    INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains_static WHERE name='#{node[:bcpc][:domain_name]}'),'#{node[:bcpc][:domain_name]}','#{node[:bcpc][:management][:vip]}','A',300,NULL);
+                    INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains_static WHERE name='#{node[:bcpc][:domain_name]}'),'#{node[:bcpc][:domain_name]}','#{node[:bcpc]['networks'][subnet][:management][:vip]}','NS',300,NULL);
+                    INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains_static WHERE name='#{node[:bcpc][:domain_name]}'),'#{node[:bcpc][:domain_name]}','#{node[:bcpc]['networks'][subnet][:management][:vip]}','A',300,NULL);
                     
                     INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains_static WHERE name='#{reverse_dns_zone}'),'#{reverse_dns_zone}', '#{reverse_dns_zone} root@#{node[:bcpc][:domain_name]} 1','SOA',300,NULL);
-                    INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains_static WHERE name='#{reverse_dns_zone}'),'#{reverse_dns_zone}','#{node[:bcpc][:management][:vip]}','NS',300,NULL);
+                    INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains_static WHERE name='#{reverse_dns_zone}'),'#{reverse_dns_zone}','#{node[:bcpc]['networks'][subnet][:management][:vip]}','NS',300,NULL);
                     
                     CREATE INDEX rec_name_index ON records_static(name);
                     CREATE INDEX nametype_index ON records_static(name,type);
@@ -158,25 +161,24 @@ ruby_block "powerdns-function-ip4_to_ptr_name" do
 end
 
 ruby_block "powerdns-table-domains-view" do
-    block do
-        mysql_root_password = get_config!('password','mysql-root','os')
-       system "mysql -uroot -p#{ mysql_root_password } -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = \"#{node[:bcpc][:pdns_dbname]}\" AND TABLE_NAME=\"domains\"' | grep -q \"domains\""
-        if not $?.success? then
-            %x[ mysql -uroot -p#{ mysql_root_password } #{node[:bcpc][:pdns_dbname]} <<-EOH
-                CREATE OR REPLACE VIEW domains AS
-                    SELECT id,name,master,last_check,type,notified_serial,account FROM domains_static;
-            ]
-            self.notifies :restart, "service[pdns]", :delayed
-            self.resolve_notification_references
-        end
+  block do
+    mysql_root_password = get_config!('password','mysql-root','os')
+    system "mysql -uroot -p#{ mysql_root_password } -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = \"#{node[:bcpc][:pdns_dbname]}\" AND TABLE_NAME=\"domains\"' | grep -q \"domains\""
+    if not $?.success? then
+      %x[ mysql -uroot -p#{ mysql_root_password } #{node[:bcpc][:pdns_dbname]} <<-EOH
+      CREATE OR REPLACE VIEW domains AS
+      SELECT id,name,master,last_check,type,notified_serial,account FROM domains_static;
+      ]
+      self.notifies :restart, "service[pdns]", :delayed
+      self.resolve_notification_references
     end
+  end
 end
-
 
 ruby_block "powerdns-table-records_forward-view" do
     block do
         mysql_root_password = get_config!('password','mysql-root','os')
-       system "mysql -uroot -p#{ mysql_root_password } -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = \"#{node[:bcpc][:pdns_dbname]}\" AND TABLE_NAME=\"records_forward\"' | grep -q \"records_forward\""
+        system "mysql -uroot -p#{ mysql_root_password } -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = \"#{node[:bcpc][:pdns_dbname]}\" AND TABLE_NAME=\"records_forward\"' | grep -q \"records_forward\""
         if not $?.success? then
             %x[ mysql -uroot -p#{ mysql_root_password } #{node[:bcpc][:pdns_dbname]} <<-EOH
                 CREATE OR REPLACE VIEW records_forward AS
@@ -192,7 +194,7 @@ ruby_block "powerdns-table-records_reverse-view" do
     block do
         mysql_root_password = get_config!('password','mysql-root','os')
 
-        reverse_dns_zone = node['bcpc']['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['floating']['cidr'])
+        reverse_dns_zone = node['bcpc']['networks'][subnet]['floating']['reverse_dns_zone'] || calc_reverse_dns_zone(node['bcpc']['networks'][subnet]['floating']['cidr'])
 
         system "mysql -uroot -p#{ mysql_root_password } -e 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = \"#{node[:bcpc][:pdns_dbname]}\" AND TABLE_NAME=\"records_reverse\"' | grep -q \"records_reverse\""
         if not $?.success? then
@@ -263,7 +265,7 @@ get_all_nodes.each do |server|
                 ]
             end
         end
-    end
+    end if server.has_key?('hostname')
 end
 
 %w{graphite zabbix}.each do |static|
@@ -274,9 +276,25 @@ end
                 system "mysql -uroot -p#{ mysql_root_password } #{node[:bcpc][:pdns_dbname]} -e 'SELECT name FROM records_static' | grep -q \"#{static}.#{node[:bcpc][:domain_name]}\""
                 if not $?.success? then
                     %x[ mysql -uroot -p#{ mysql_root_password } #{node[:bcpc][:pdns_dbname]} <<-EOH
-                            INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node[:bcpc][:domain_name]}'),'#{static}.#{node[:bcpc][:domain_name]}','#{node[:bcpc][:management][:vip]}','A',300,NULL);
+                            INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node[:bcpc][:domain_name]}'),'#{static}.#{node[:bcpc][:domain_name]}','#{node[:bcpc]['networks'][subnet][:management][:vip]}','A',300,NULL);
                     ]
                 end
+            end
+        end
+    end
+end
+
+%w{s3}.each do |static|
+    ruby_block "create-floating-dns-entry-#{static}" do
+        block do
+            mysql_root_password = get_config!('password','mysql-root','os')
+            if get_nodes_for("ceph-rgw").length >= 1 then
+                system "mysql -uroot -p#{ mysql_root_password } #{node[:bcpc][:pdns_dbname]} -e 'SELECT name FROM records_static' | grep -q \"#{static}.#{node[:bcpc][:domain_name]}\""
+               if not $?.success? then
+                   %x[ mysql -uroot -p#{ mysql_root_password } #{node[:bcpc][:pdns_dbname]} <<-EOH
+                           INSERT INTO records_static (domain_id, name, content, type, ttl, prio) VALUES ((SELECT id FROM domains WHERE name='#{node[:bcpc][:domain_name]}'),'#{static}.#{node[:bcpc][:domain_name]}','#{node[:bcpc]['networks'][subnet][:floating][:vip]}','A',300,NULL);
+                   ]
+               end
             end
         end
     end
