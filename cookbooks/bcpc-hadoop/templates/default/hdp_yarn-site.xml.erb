@@ -179,6 +179,11 @@
 
   <property>
     <name>yarn.resourcemanager.scheduler.class</name>
-    <value><%= node['bcpc']['hadoop']['yarn']['scheduler'] %></value>
+    <value><%= node['bcpc']['hadoop']['yarn']['scheduler']['class'] %></value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value><%= node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb'] %></value>
   </property>
 </configuration>
