@@ -161,7 +161,9 @@ if node[:bcpc][:hadoop][:mounts].length <= node[:bcpc][:hadoop][:hdfs][:failed_v
   Chef::Application.fatal!("You have fewer #{node[:bcpc][:hadoop][:disks]} than #{node[:bcpc][:hadoop][:hdfs][:failed_volumes_tolerated]}! See comments of HDFS-4442.")
 end
 
-# Sqoop.
+# Add Sqoop.
+node.default[:bach][:sqoop][:zookeeper_conf_dir] = 
+  node[:bcpc][:hadoop][:zookeeper][:conf_dir]
 include_recipe 'bach_sqoop'
 
 # Build nodes for HDFS storage

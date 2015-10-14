@@ -31,3 +31,5 @@ default[:bach][:sqoop][:jdbc_jars] =
         '7ba5290be5844b5bbdae3e4bee7e6a86b62b5feeacd224b60e66530df40a307a'
      }                                   
   }
+
+default[:bach][:sqoop][:zookeeper_conf_dir] = '/etc/zookeeper/conf'

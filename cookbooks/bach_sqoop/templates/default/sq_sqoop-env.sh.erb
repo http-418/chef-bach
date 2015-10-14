@@ -34,9 +34,7 @@ export HBASE_HOME=/usr/lib/hbase
 export HIVE_HOME=/usr/lib/hive
 
 #Set the path for where zookeper config dir is
-<% if (node[:bcpc][:hadoop][:zookeeper][:conf_dir] rescue nil) %>
 export ZOOCFGDIR=<%= node[:bcpc][:hadoop][:zookeeper][:conf_dir] %>
-<% end %>
 
 # add libthrift in hive to sqoop class path first so hive imports work
 export SQOOP_USER_CLASSPATH="`ls ${HIVE_HOME}/lib/libthrift-*.jar 2> /dev/null`:${SQOOP_USER_CLASSPATH}"
