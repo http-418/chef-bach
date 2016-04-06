@@ -295,6 +295,32 @@ def wait_for_host(entry)
   end
 end  
 
+# Find the Chef environment
+def find_chef_env()
+  require 'json'
+  require 'rubygems'
+  require 'ohai'
+  require 'mixlib/shellout'
+  o = Ohai::System.new
+  o.all_plugins
+
+  env_command =
+    Mixlib::ShellOut.new('sudo', 'knife',
+                         'node', 'show',
+                         o[:fqdn] || o[:hostname], '-E',
+                         '-f', 'json')
+  
+  env_command.run_command
+  
+  if !env_command.status.success?
+    raise 'Could not retrieve Chef environment!\n' +
+      env_command.stdout + '\n' +
+      env_command.stderr
+  end
+  
+  JSON.parse(env_command.stdout)['chef_environment']
+end
+
 #
 # This conditional allows us to use the methods into irb instead of
 # invoking the script from a UNIX shell.
@@ -312,14 +338,15 @@ if __FILE__ == $PROGRAM_NAME
     exit(-1)
   end
 
+  chef_env = find_chef_env
   cobbler_unenroll(vm_entry)
   cobbler_enroll(vm_entry)
   cobbler_sync
   delete_node_data(vm_entry)
   restart_host(vm_entry)
   wait_for_host(vm_entry)
-  cluster_assign_roles('Test-Laptop', :basic, vm_entry)
+  cluster_assign_roles(chef_env, :basic, vm_entry)
   rotate_vault_keys
-  cluster_assign_roles('Test-Laptop', :hadoop)
-  cluster_assign_roles('Test-Laptop', :hadoop, vm_entry)
+  cluster_assign_roles(chef_env, :hadoop)
+  cluster_assign_roles(chef_env, :hadoop, vm_entry)
 end
