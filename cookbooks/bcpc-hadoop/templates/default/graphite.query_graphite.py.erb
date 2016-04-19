@@ -78,7 +78,10 @@ class GraphiteToZabbix(object):
     if parts[0] == 'servers':
       item = '.'.join(str(s) for s in parts[1:]) 
     elif parts[0] == 'jmx':
-      item = host + '.' + parts[-1]
+      if parts[1] == 'kafka':
+        item = host + '.' + parts[-2]
+      else:
+        item = host + '.' + parts[-1]
     return (host, item)
 
   def write_data(self, data):

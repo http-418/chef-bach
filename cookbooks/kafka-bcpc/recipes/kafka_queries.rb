@@ -1,9 +1,9 @@
 # Set Kafka related zabbix triggers
 trigger_chk_period = "#{node[:bcpc][:hadoop][:zabbix][:trigger_chk_period]}m"
 node.set[:bcpc][:hadoop][:graphite][:service_queries][:kafka] = {
-  'kafka_head.activeControllerCount' => {
+  'kafka.ActiveControllerCount' => {
      'type' => "jmx",
-     'query' => "kafka.KafkaController.ActiveControllerCount.Value",
+     'query' => "jmx.kafka.*.kafka.KafkaController.ActiveControllerCount.Value",
      'trigger_val' => "max(3m)",
      'trigger_cond' => "=0",
      'trigger_name' => "KafkaControllerCount",
@@ -12,9 +12,9 @@ node.set[:bcpc][:hadoop][:graphite][:service_queries][:kafka] = {
      'severity' => 4,
      'route_to' => "admin"
   },
-  'kafka_head.OfflinePartitionsCount' => {
+  'kafka.OfflinePartitionsCount' => {
      'type' => "jmx",
-     'query' => "kafka.KafkaController.OfflinePartitionsCount.Value",
+     'query' => "jmx.kafka.*.kafka.KafkaController.OfflinePartitionsCount.Value",
      'trigger_val' => "min(3m)",
      'trigger_cond' => ">0",
      'trigger_name' => "KafkaOfflinePartitionsCount",
@@ -23,9 +23,9 @@ node.set[:bcpc][:hadoop][:graphite][:service_queries][:kafka] = {
      'severity' => 4,
      'route_to' => "admin"
   },
-  'kafka_head.UnderReplicatedPartitions' => {
+  'kafka.UnderReplicatedPartitions' => {
     'type' => "jmx",
-     'query' => "kafka.ReplicaManager.UnderReplicatedPartitions.Value",
+     'query' => "jmx.kafka.*.kafka.ReplicaManager.UnderReplicatedPartitions.Value",
      'trigger_val' => "max(3m)",
      'trigger_cond' => ">0",
      'trigger_name' => "KafkaUnderReplicatedPartitions",
