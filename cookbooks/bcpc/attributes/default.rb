@@ -30,28 +30,29 @@ default['bcpc']['bootstrap']['admin_users'] = []
 # unique within a cluster.
 #
 # The node number is generated from the integer value of the
-# management interface mac_address, modulo Java's Integer.MAX_VALUE.
+# default interface mac_address, modulo Java's Integer.MAX_VALUE.
 #
 # On the provisioning node and during early bootstrap, we won't have
 # any of these values, in which case we just don't set the
 # node_number.
 #
-management_interface = begin
-                         interface_name = node[:bcpc][:management][:interface]
-                         node[:network][:interfaces][interface_name]
-                       rescue
-                         nil
-                       end
+default_interface = begin
+                      interface_name = node[:network][:default_interface]
+                      node[:network][:interfaces][interface_name]
+                    rescue
+                      nil
+                    end
 
-if management_interface
-  mac_address = management_interface[:addresses].select{ |addr,hash|
+if default_interface
+  mac_address = default_interface[:addresses].select{ |addr,hash|
     hash['family'] == 'lladdr'
-  }.keys.first
+  }.keys.sort.first
 
   max_value = (2**31 - 1) # Java Integer.MAX_VALUE
   integer_mac = mac_address.downcase.split(':').join.to_i(base=16)
-  node.set['bcpc']['node_number'] = integer_mac % max_value
-end  
+  node.default['bcpc']['node_number'] = integer_mac % max_value
+end
+
 
 
 ###########################################
