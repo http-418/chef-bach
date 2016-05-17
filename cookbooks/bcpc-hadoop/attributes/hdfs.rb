@@ -2,35 +2,35 @@ default[:bcpc][:hadoop][:hdfs][:dfs].tap do |dfs|
   dfs[:namenode][:audit][:log][:async] = true
   dfs[:webhdfs][:enabled] = true
   dfs[:client][:read][:shortcircuit] = true
-  dfs[:domain][:socket][:path] = "/var/run/hadoop-hdfs/dn._PORT"
+  dfs[:domain][:socket][:path] = '/var/run/hadoop-hdfs/dn._PORT'
   dfs[:client]['file-block-storage-locations'][:timeout] = 3000
   dfs[:datanode]['hdfs-blocks-metadata'][:enabled] = true
   dfs[:namenode][:datanode][:registration]['ip-hostname-check'] = false
   dfs[:namenode][:avoid][:read][:stale][:datanode] = true
   dfs[:namenode][:avoid][:write][:stale][:datanode] = true
-  dfs[:hosts][:exclude] = "/etc/hadoop/conf/dfs.exclude"
-  dfs[:datanode][:du][:reserved] = 1073741824
-  dfs[:permissions][:superusergroup] = "hdfs"
-  dfs[:cluster][:administrators] = "hdfs"
+  dfs[:hosts][:exclude] = '/etc/hadoop/conf/dfs.exclude'
+  dfs[:datanode][:du][:reserved] = 1_073_741_824
+  dfs[:permissions][:superusergroup] = 'hdfs'
+  dfs[:cluster][:administrators] = 'hdfs'
   dfs[:dfs][:ha]['automatic-failover'][:enabled] = true
 end
 
 default[:bcpc][:hadoop][:hdfs][:ldap].tap do |ldap|
   ldap[:integration] = false
-  ldap[:user] = "" #must be LDAP DN
-  ldap[:domain] = "BCPC.EXAMPLE.COM"
+  ldap[:user] = '' # must be LDAP DN
+  ldap[:domain] = 'BCPC.EXAMPLE.COM'
   ldap[:port] = 389
   ldap[:password] =  nil
-  ldap[:search][:filter][:user]="(&(objectclass=user)(sAMAccountName={0}))"
-  ldap[:search][:filter][:group]="(objectClass=group)"
+  ldap[:search][:filter][:user] = '(&(objectclass=user)(sAMAccountName={0}))'
+  ldap[:search][:filter][:group] = '(objectClass=group)'
 end
 
 default[:bcpc][:hadoop][:hdfs][:site_xml].tap do |site_xml|
   dfs = node[:bcpc][:hadoop][:hdfs][:dfs]
-  
+
   site_xml['dfs.replication'] =
     node[:bcpc][:hadoop][:hdfs][:dfs_replication_factor]
-  
+
   site_xml['dfs.namenode.audit.log.async'] =
     dfs[:namenode][:audit][:log][:async]
 
@@ -58,7 +58,7 @@ default[:bcpc][:hadoop][:hdfs][:site_xml].tap do |site_xml|
 
   site_xml['dfs.client.read.shortcircuit'] =
     dfs[:client][:read][:shortcircuit]
-  
+
   site_xml['dfs.domain.socket.path'] =
     dfs[:domain][:socket][:path]
 
@@ -73,6 +73,9 @@ default[:bcpc][:hadoop][:hdfs][:site_xml].tap do |site_xml|
 
   site_xml['dfs.datanode.ipc.address'] =
     node[:bcpc][:floating][:ip].to_s + ':50020'
+
+  site_xml['dfs.client.local.interfaces'] =
+    node[:bcpc][:floating][:ip].to_s + '/32'
 
   site_xml['dfs.namenode.avoid.read.stale.datanode'] =
     dfs[:namenode][:avoid][:read][:stale][:datanode]
@@ -91,7 +94,7 @@ default[:bcpc][:hadoop][:hdfs][:site_xml].tap do |site_xml|
 
   site_xml['dfs.datanode.max.transfer.threads'] =
     node[:bcpc][:hadoop][:datanode][:max][:xferthreads]
-  
+
   site_xml['dfs.namenode.handler.count'] =
     node[:bcpc][:hadoop][:namenode][:handler][:count]
 end

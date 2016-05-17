@@ -1,0 +1,10 @@
+#
+# The %w and %W operators make it difficult to use comments in-line
+# with configuration arrays.  This is inexplicably recommended by old
+# versions of rubocop.
+#
+# Here, we explicitly disable the check, so that we may freely use []
+# instead of %w().
+#
+Style/WordArray:
+  Enabled: false
