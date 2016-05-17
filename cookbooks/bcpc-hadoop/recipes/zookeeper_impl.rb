@@ -56,15 +56,20 @@ bash "kill zookeeper-org-apache-zookeeper-server-quorum-QuorumPeerMain" do
   returns [0, 1]
 end
 
-bash "init-zookeeper" do
-  code "service zookeeper-server init --myid=#{node[:bcpc][:node_number]}"
+bash 'init-zookeeper' do
+  code "service zookeeper-server init " +
+    "--myid=#{node[:bcpc][:hadoop][:zookeeper][:myid]}"
+  
+  not_if do
+    ::File.exists?("#{node[:bcpc][:hadoop][:zookeeper][:data_dir]}/myid")
+  end
+  
   # race immediate run of restarting ZK on initial stand-up
   subscribes :run, "link[/etc/init.d/zookeeper-server]", :immediate
-  not_if { ::File.exists?("#{node[:bcpc][:hadoop][:zookeeper][:data_dir]}/myid") }
 end
 
 file "#{node[:bcpc][:hadoop][:zookeeper][:data_dir]}/myid" do
-  content node[:bcpc][:node_number]
+  content node[:bcpc][:hadoop][:zookeeper][:myid]
   owner node[:bcpc][:hadoop][:zookeeper][:owner]
   group node[:bcpc][:hadoop][:zookeeper][:group]
   mode 0644
