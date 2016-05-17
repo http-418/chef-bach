@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!-- -*- mode: web -*- -->
+<allocations>
+     <defaultQueueSchedulingPolicy>DRF</defaultQueueSchedulingPolicy>
+    
+    <% @queues.each do |queue| %>
+	<% type = 'type=' + queue.type.to_s.encode(:xml => :attr) %>
+	<% name = queue.name.to_s.encode(:xml => :attr) %>
+	<queue name=<%= name %> <%= type if queue.type %>>
+	    <% queue.escaped_properties.each do |tag_name, xml_text| %>
+		<<%= tag_name %>><%= xml_text %></<%= tag_name %>>
+	    <% end %>
+	</queue>
+    <% end %>
+
+    <queuePlacementPolicy>
+	<rule name="specified" create="false" />
+	<rule name="nestedUserQueue">
+	    <rule name="secondaryGroupExistingQueue" create="false" />
+	</rule>
+	<rule name="nestedUserQueue">
+	    <rule name="default" queue="default"/>
+	</rule>
+	<rule name="reject"/>
+    </queuePlacementPolicy>
+</allocations>

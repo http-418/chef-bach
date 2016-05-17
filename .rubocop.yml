@@ -8,3 +8,7 @@
 #
 Style/WordArray:
   Enabled: false
+
+# This cop is too noisy for use in our current codebase.
+Metrics/MethodLength:
+  Enabled: false
