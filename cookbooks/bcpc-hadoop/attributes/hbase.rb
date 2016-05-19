@@ -69,10 +69,6 @@ bucketcache_combinedcache_percent =
 # Additional properties are defined at runtime in the
 # bcpc-hadoop::hbase_config recipe.
 #
-management_subnet = node['bcpc']['management']['subnet']
-management_interface =
-  node['bcpc']['networks'][management_subnet]['floating']['interface']
-
 default['bcpc']['hadoop']['hbase']['site_xml'].tap do |site_xml|
   site_xml['hbase.rootdir'] =
     node['bcpc']['hadoop']['hbase']['root_dir'].to_s
@@ -85,12 +81,6 @@ default['bcpc']['hadoop']['hbase']['site_xml'].tap do |site_xml|
 
   site_xml['hbase.hregion.majorcompaction'] =
     node['bcpc']['hadoop']['hbase']['major_compact']['time'].to_s
-
-  site_xml['hbase.regionserver.dns.interface'] =
-    management_interface
-
-  site_xml['hbase.master.dns.interface'] =
-    management_interface
 
   site_xml['hbase.regionserver.ipc.address'] =
     node['bcpc']['floating']['ip'].to_s
