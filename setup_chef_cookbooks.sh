@@ -42,6 +42,14 @@ chef_server_url          'https://${BOOTSTRAP_IP}'
 syntax_check_cache_path  '$(pwd)/.chef/syntax_check_cache'
 cookbook_path '$(pwd)/vendor/cookbooks'
  
+# Disable the Ohai password module which explodes on a Single-Sign-On-joined system
+Ohai::Config[:disabled_plugins] = [ "passwd" ]
+
+File.umask(0007)
+EOF
+
+if [[ -n "$PROXY" ]]; then
+  cat << EOF >> .chef/knife.rb
 no_proxy_array = ["localhost", o[:ipaddress], o[:hostname], o[:fqdn], "${BOOTSTRAP_IP}", "${binary_server_host}"]
 no_proxy_array.insert("*#{o[:domain]}") unless o[:domain].nil?
 no_proxy_string = no_proxy_array.uniq * ","
@@ -60,6 +68,7 @@ https_proxy ENV['https_proxy']
 no_proxy no_proxy_string
 ENV['GIT_SSL_NO_VERIFY'] = 'true'
 EOF
+fi
 
 mkdir -p ./vendor
 /opt/chefdk/bin/berks vendor ./vendor/cookbooks
