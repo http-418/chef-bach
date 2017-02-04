@@ -31,18 +31,20 @@ stats_password = make_config('mysql-hive-table-stats-password', secure_password)
 end
 
 hive_site_vars = {
-  is_hive_serverzzzz: node.run_list.expand(node.chef_environment).recipes.include?('bcpc-hadoop::hive_hcatalog'),
-  mysql_hosts: node['bcpc']['hadoop']['mysql_hosts'].map { |m| m[:hostname] + ':3306' },
-  zk_hosts: node['bcpc']['hadoop']['zookeeper']['servers'],
-  hive_hosts: node['bcpc']['hadoop']['hive_hosts'],
-  stats_user: stats_user,
-  warehouse: "#{node['bcpc']['hadoop']['hdfs_url']}/user/hive/warehouse",
-  metastore_keytab: "#{node['bcpc']['hadoop']['kerberos']['keytab']['dir']}/#{node['bcpc']['hadoop']['kerberos']['data']['hive']['keytab']}",
-  server_keytab: "#{node['bcpc']['hadoop']['kerberos']['keytab']['dir']}/#{node['bcpc']['hadoop']['kerberos']['data']['hive']['keytab']}",
-  kerberos_enabled: node['bcpc']['hadoop']['kerberos']['enable'],
-  hs2_auth: node['bcpc']['hadoop']['hive']['server2']['authentication'],
-  hs2_ldap_url: node['bcpc']['hadoop']['hive']['server2']['ldap_url'],
-  hs2_ldap_domain: node['bcpc']['hadoop']['hive']['server2']['ldap_domain']
+
+  :is_hive_server => node.run_list.expand(node.chef_environment).recipes.include?("bcpc-hadoop::hive_hcatalog"),
+  :mysql_hosts => node[:bcpc][:hadoop][:mysql_hosts].map{ |m| m[:hostname] },
+  :zk_hosts => node[:bcpc][:hadoop][:zookeeper][:servers],
+  :hive_hosts => node[:bcpc][:hadoop][:hive_hosts],
+  :stats_user => stats_user,
+  :warehouse => node[:bcpc][:hadoop][:hive][:warehouse][:dir],
+  :scratch => node[:bcpc][:hadoop][:hive][:scratch][:dir],
+  :metastore_keytab => "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/#{node[:bcpc][:hadoop][:kerberos][:data][:hive][:keytab]}",
+  :server_keytab => "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/#{node[:bcpc][:hadoop][:kerberos][:data][:hive][:keytab]}",
+  :kerberos_enabled => node[:bcpc][:hadoop][:kerberos][:enable],
+  :hs2_auth => node[:bcpc][:hadoop][:hive][:server2][:authentication],
+  :hs2_ldap_url => node[:bcpc][:hadoop][:hive][:server2][:ldap_url],
+  :hs2_ldap_domain => node[:bcpc][:hadoop][:hive][:server2][:ldap_domain]
 }
 
 hive_site_vars[:hive_sql_password] = \
