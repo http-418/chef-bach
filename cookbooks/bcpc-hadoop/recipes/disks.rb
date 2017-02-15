@@ -156,18 +156,38 @@ ruby_block 'format-disks' do
         unless check_command.status.success?
           Chef::Resource::Execute.new("mkfs-#{dev_name}",
                                       node.run_context).tap do |ee|
-            ee.command "mkfs -t xfs -f #{dev_name}"
+            ee.command "mkfs -t xfs -f #{dev_name} -L data_#{i}"
             ee.run_action(:run)
           end
         end
 
-        Chef::Resource::Mount.new("/disk/#{i}",
+        uuid_command =
+          Mixlib::ShellOut.new("blkid -o value -s UUID #{dev_name}")
+        uuid_command.run_command
+
+        unless uuid_command.status.success? && uuid_command.stdout.length > 1
+          raise "Could not fetch UUID for filesystem on #{dev_name}"
+        end
+
+        mount_path = "/disk/#{i}"
+        mount_device = uuid_command.stdout.chomp
+
+        Chef::Resource::Mount.new(mount_path,
                                   node.run_context).tap do |mm|
-          mm.device dev_name
+          mm.device mount_device
+          mm.device_type :uuid
           mm.fstype 'xfs'
           mm.options 'noatime,nodiratime,inode64'
           mm.run_action(:enable)
           mm.run_action(:mount)
+        end
+
+        # Delete duplicate fstab entries that don't use a UUID.
+        Chef::Resource::Mount.new("stale-#{mount_path}",
+                                  node.run_context).tap do |mm|
+          mm.device dev_name
+          mm.mount_point mount_path
+          mm.run_action(:disable)
         end
       end
 
