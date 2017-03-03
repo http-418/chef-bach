@@ -42,10 +42,10 @@ execute 'build_spark_package' do
     "--description 'Spark Package with Hadoop 2.7' -p #{bins_dir} *"
 
   fpm_environment =
-  {
-   PATH: "/opt/chefdk/embedded/bin:#{ENV['PATH']}",
-   BUNDLE_GEMFILE: "#{node[:bach][:repository][:repo_directory]}/Gemfile"
-  }
+    {
+     PATH: [::File.dirname(fpm_path), ENV['PATH']].join(':'),
+     BUNDLE_GEMFILE: "#{node[:bach][:repository][:repo_directory]}/Gemfile"
+    }
   environment fpm_environment
 
   umask 0002
