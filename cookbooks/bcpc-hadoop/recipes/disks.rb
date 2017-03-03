@@ -18,7 +18,7 @@
 # limitations under the License.
 #
 
-['xfsprogs', 'parted'].each do |package_name|
+%w(parted util-linux xfsprogs).each do |package_name|
   package package_name do
     action :upgrade
   end
@@ -219,3 +219,17 @@ ruby_block 'format-disks' do
     end
   end
 end
+
+#
+# disk logic:
+#
+# 1. determine all available disks for hadoop (helper method)
+# 2. make sure all disks are formatted
+# 3. determine a mount point for each disk
+#  a. if it's already mounted, use that
+#  b. if an entry exists in fstab, use that
+#  c. if neither exists, choose first /data/N directory that is not
+#     mounted or present in fstab
+# 4. mount all
+# 5. update fstab
+#
