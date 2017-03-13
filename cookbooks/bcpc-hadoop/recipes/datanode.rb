@@ -270,6 +270,7 @@ locking_resource 'hadoop-hdfs-datanode-restart' do
                    full_cmd true}
   perform :restart
   action :serialize_process
+
   subscribes :serialize, 'link[/etc/init.d/hadoop-hdfs-datanode]', :delayed
   [
    'template[/etc/hadoop/conf/hdfs-site.xml]',
