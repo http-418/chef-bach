@@ -21,6 +21,7 @@ chef_vault_loaded = begin
                       false
                     end
 
+include_recipe 'bach_repository::tools'
 include_recipe 'bach_repository::directory'
 bins_path = node['bach']['repository']['bins_directory']
 apt_directory = node['bach']['repository']['apt_directory']
@@ -149,8 +150,8 @@ directory apt_bins_path do
   mode 0555
 end
 
-package 'dpkg-dev' do
-  action :upgrade
+log 'upgrading dpkg-dev' do
+  notifies :upgrade, 'package[dpkg-dev]', :immediately
 end
 
 # Generate packages files, then move them into place (almost) atomically.

@@ -85,7 +85,7 @@ unless node['bcpc']['node_number']
 
   max_value = (2**31 - 1) # Java Integer.MAX_VALUE
   integer_mac = mac_address.downcase.split(':').join.to_i(16)
-  node.set['bcpc']['node_number'] = integer_mac % max_value
+  node.normal['bcpc']['node_number'] = integer_mac % max_value
 end
 
 ###########################################
