@@ -1,15 +1,22 @@
-default['bach']['repository']['chefdk']['url'] = \
-  'https://packages.chef.io/files/stable/chefdk/1.2.22/ubuntu/' \
-  '14.04/chefdk_1.2.22-1_amd64.deb'
-default['bach']['repository']['chefdk']['sha256'] = \
-  '518ecf308764c08a647ddabc6511af231affd2bf3e6526e60ef581926c8e7105'
-default['bach']['repository']['chef']['url'] = \
-  'https://packages.chef.io/repos/apt/stable/ubuntu/' \
-  '14.04/chef_12.19.36-1_amd64.deb'
-default['bach']['repository']['chef']['sha256'] = \
-  'fbf44670ab5b76e4f1a1f5357885dafcc79e543ccbbe3264afd40c15d604b6dc'
-default['bach']['repository']['chef_server']['url'] = \
-  'https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/' \
-  '12.04/x86_64/chef-server_11.1.1-1_amd64.deb'
-default['bach']['repository']['chef_server']['sha256'] = \
-  'b6c354178cc83ec94bea40a018cef697704415575c7797c4abdf47ab996eb258'
+default['bach']['repository'].tap do |repo|
+  repo['chefdk'] =
+    {
+     url: 'https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/' \
+       '14.04/x86_64/chefdk_0.12.0-1_amd64.deb',
+     sha256: '6fcb4529f99c212241c45a3e1d024cc1519f5b63e53fc1194b5276f1d8695aaa'
+    }
+
+  repo['chef'] =
+    {
+     url: 'https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/' \
+       '14.04/x86_64/chef_12.8.1-1_amd64.deb',
+     sha256: '92b7f3eba0a62b20eced2eae03ec2a5e382da4b044c38c20d2902393683c77f7'
+    }
+
+  repo['chef_server'] =
+    {
+     url: 'https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/' \
+       '12.04/x86_64/chef-server_11.1.1-1_amd64.deb',
+     sha256: 'b6c354178cc83ec94bea40a018cef697704415575c7797c4abdf47ab996eb258'
+    }
+end

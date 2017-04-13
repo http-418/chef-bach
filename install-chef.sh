@@ -30,7 +30,7 @@ echo "deb [arch=amd64] $BINARY_SERVER_URL 0.5.0 main" > \
   /etc/apt/sources.list.d/bcpc.list
 wget --no-proxy -O - ${BINARY_SERVER_URL}/apt_key.pub | apt-key add -
 apt-get update
-apt-get install -y chef=12.19.36-1
+apt-get install -y chef=12.8.1-1
 
 # remove rubygems and install only our gemserver
 /opt/chef/embedded/bin/gem sources --add ${BINARY_SERVER_URL} || \
