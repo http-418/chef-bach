@@ -8,9 +8,12 @@ bins_dir = node['bach']['repository']['bins_directory']
 gems_dir = node['bach']['repository']['gems_directory']
 gem_binary = node['bach']['repository']['gem_bin']
 bundler_bin = node['bach']['repository']['bundler_bin']
+bundle_directory =
+  File.join(node['bach']['repository']['repo_directory'], 'vendor', 'bundle')
 
-package 'libaugeas-dev'
-package 'libkrb5-dev'
+package ['libaugeas-dev', 'libkrb5-dev'] do
+  action :upgrade
+end
 
 directory "#{node['bach']['repository']['repo_directory']}/vendor" do
   owner 'vagrant'
@@ -24,11 +27,11 @@ directory "#{node['bach']['repository']['repo_directory']}/.bundle" do
 end
 
 file "#{node['bach']['repository']['repo_directory']}/.bundle/config" do
-  content <<-EOF
----
-BUNDLE_PATH: '#{node['bach']['repository']['repo_directory']}/vendor/bundle'
-BUNDLE_DISABLE_SHARED_GEMS: 'true'
-EOF
+  content <<-EOF.gsub(/^ {4}/,'')
+    ---
+    BUNDLE_PATH: '#{bundle_directory}'
+    BUNDLE_DISABLE_SHARED_GEMS: 'true'
+  EOF
   owner 'vagrant'
   action :create
 end
@@ -66,7 +69,15 @@ directory gems_dir do
   mode 0555
 end
 
-link "#{bins_dir}/gems" do
+old_gems_dir = "#{bins_dir}/gems"
+
+directory old_gems_dir do
+  action :delete
+  recursive true
+  only_if { File.directory?(old_gems_dir) }
+end
+
+link old_gems_dir do
   to "#{gems_dir}"
 end
 
