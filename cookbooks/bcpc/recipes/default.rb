@@ -112,4 +112,31 @@ else # All non-openstack situations
   node.default['bcpc']['floating']['cidr'] = node['bcpc']['networks'][subnet]['floating']['cidr']
 end
 
+# Fix bash history behavior.
+file '/etc/profile.d/history.sh' do
+  user 'root'
+  group 'root'
+  mode 0555
+  content <<-EOM.gsub(/^ {4}/,'')
+    if [ -t ] && [[ $- == *i* ]]; then
+      # tcsh-like kill-word for C-w
+      stty werase undef
+      bind '"\C-w": backward-kill-word'
+
+      # tcsh-like incremental history search
+      bind '"\C-[OA":        history-search-backward'
+      bind '"\C-[OB":        history-search-forward'
+      bind '"\C-[[A":        history-search-backward'
+      bind '"\C-[[B":        history-search-forward'
+    fi
+
+    # fix braindead history behaviour
+    export HISTSIZE=500000
+    export HISTCONTROL=ignoredups
+    export HISTTIMEFORMAT="%F %T "
+    shopt -s histappend
+    PROMPT_COMMAND='history -a'
+  EOM
+end
+
 node.save rescue nil
