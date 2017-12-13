@@ -91,38 +91,3 @@ user_ulimit 'kafka' do
   filehandle_limit node[:kafka][:ulimit_file]
   notifies :restart, 'service[kafka-broker]', :immediately
 end
-
-#
-# This is probably no longer needed now that the upstream kafka
-# cookbook includes its _coordinate recipe.
-#
-ruby_block 'kafkaup' do
-  block do
-    zk_path =
-      "/brokers/ids/#{node[:kafka][:broker][:broker_id]}"
-
-    zk_hosts =
-      node[:kafka][:broker][:zookeeper][:connect]
-
-    zk_connection_string =
-      zk_hosts.map { |zkh| "#{zkh}:2181" }.join(',')
-
-    Chef::Log.info("Zookeeper hosts are #{zk_connection_string}")
-
-    max_time = 19
-    max_time.times do |ii|
-      if znode_exists?(zk_path, zk_connection_string)
-        Chef::Log.info("Kafka broker at znode #{zk_path} is marked up.")
-        break
-      else
-        Chef::Log.info("Kafka broker at znode #{zk_path} is marked " \
-                       "down. (#{ii})")
-      end
-      sleep(1)
-    end
-
-    unless znode_exists?(zk_path, zk_connection_string)
-      raise "Kafka is reported down for more than #{max_time} seconds"
-    end
-  end
-end
