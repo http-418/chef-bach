@@ -210,8 +210,6 @@ function create_cluster_VMs {
     sed -e 's/.*=//' -e 's/"//g'))
   IFS="$oifs"
   VBN0="${bootstrap_interfaces[0]?Need a Virtualbox network 1 for the bootstrap}"
-  VBN1="${bootstrap_interfaces[1]?Need a Virtualbox network 2 for the bootstrap}"
-  VBN2="${bootstrap_interfaces[2]?Need a Virtualbox network 3 for the bootstrap}"
 
   if [[ $CLUSTER_VM_EFI == true ]]; then
     #
@@ -257,8 +255,6 @@ function create_cluster_VMs {
 
           # Add the network interfaces
           $VBM modifyvm $vm --nic1 hostonly --hostonlyadapter1 "$VBN0"
-          $VBM modifyvm $vm --nic2 hostonly --hostonlyadapter2 "$VBN1"
-          $VBM modifyvm $vm --nic3 hostonly --hostonlyadapter3 "$VBN2"
 
 	  # Create a disk controller to hang disks off of.
 	  DISK_CONTROLLER="SATA_Controller"
@@ -345,7 +341,7 @@ function install_cluster {
   vagrant ssh -c 'sudo rm -f /var/chef/cache/chef-stacktrace.out'
   ./bootstrap_chef.sh --vagrant-remote $ip $environment
   if vagrant ssh -c 'sudo grep -i no_lazy_load /var/chef/cache/chef-stacktrace.out'; then
-      vagrant ssh -c 'sudo rm /var/chef/cache/chef-stacktrace.out' 
+      vagrant ssh -c 'sudo rm /var/chef/cache/chef-stacktrace.out'
   elif vagrant ssh -c 'test -e /var/chef/cache/chef-stacktrace.out' || \
       ! vagrant ssh -c 'test -d /etc/chef-server'; then
     echo '========= Failed to Chef!' >&2

@@ -24,7 +24,7 @@ ip route add <%=@node["bcpc"]["networks"][subnet]["storage"]["cidr"]%> \
 ip route flush table mgmt
 ip route add default via <%=@node["bcpc"]["networks"][subnet]["management"]["gateway"]%> \
          dev <%=@node["bcpc"]["networks"][subnet]["management"]["interface"]%> \
-         table mgmt 
+         table mgmt
 ip route add <%=@node["bcpc"]["networks"][subnet]["management"]["cidr"]%> \
          dev <%=@node["bcpc"]["networks"][subnet]["management"]["interface"]%> \
          scope link src <%=@node["bcpc"]["management"]["ip"]%> \
@@ -41,7 +41,7 @@ ip rule add to <%=@node["bcpc"]["networks"][subnet]["management"]["cidr"]%> pref
 ip route flush table storage
 ip route add default via <%=@node["bcpc"]["networks"][subnet]["storage"]["gateway"]%> \
          dev <%=@node["bcpc"]["networks"][subnet]["storage"]["interface"]%> \
-         table storage 
+         table storage
 ip route add <%=@node["bcpc"]["networks"][subnet]["storage"]["cidr"]%> \
          dev <%=@node["bcpc"]["networks"][subnet]["storage"]["interface"]%> \
          scope link src <%=@node["bcpc"]["storage"]["ip"]%> \
